@@ -1,0 +1,32 @@
+{
+  "name": "sofi-blog",
+  "version": "1.0.0",
+  "description": "Little project to spin up a blog and integrate Notion",
+  "main": "app.ts",
+  "repository": "https://github.com/SofiDis/sofi-blog.git",
+  "author": "Sofidis <sofia.dissegna93@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "yarn run ts-node-dev --respawn --transpile-only ./src/app.ts"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.6",
+    "axios": "^1.4.0",
+    "config": "^3.3.9",
+    "express": "^4.18.2",
+    "global": "^4.4.0",
+    "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "@types/config": "^3.3.0",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.4.1",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.44.0",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.1.6",
+    "tslib": "^2.4.1"
+  }
+}

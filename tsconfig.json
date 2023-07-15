@@ -1,0 +1,32 @@
+{
+    "extends": "./tsconfig/node.json",
+    "compilerOptions": {
+        "lib": [
+            "esnext"
+        ],
+        "baseUrl": ".",
+        "rootDir": "./",
+        "skipLibCheck": true,
+        "moduleResolution": "Node",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ],
+        },
+        "strict": true,
+        "target": "esnext",
+    },
+    "include": [
+        "."
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "build",
+    ],
+    "ts-node": {
+        "require": [
+            "tsconfig-paths/register"
+        ]
+    }
+}

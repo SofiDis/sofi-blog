@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Vue App",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["esnext", "dom", "dom.Iterable"],
+    "module": "esnext",
+    "target": "ES2018",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "vueCompilerOptions": {
+    "target": 2.7
+  }
+}
