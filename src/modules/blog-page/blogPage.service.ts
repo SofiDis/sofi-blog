@@ -19,6 +19,8 @@ import {
 } from "../../providers/services/notionService";
 import { ContentBlock, Page } from "./types";
 
+const pageIndexFileName = "pageIndex";
+
 /**
  * Create an array of pages from a Notion database.
  *
@@ -40,8 +42,28 @@ async function indexPages(): Promise<Page[] | null> {
     }
   });
 
-  // Parsering the data.
   return pages;
+}
+
+/**
+ * Create a page index entity.
+ *
+ */
+async function buildPageIndex(): Promise<any | null> {
+  const allPages = await indexPages();
+
+  const pagesIndex = {
+    blogTitle: "",
+    pageList:
+      allPages?.map((item: Page) => {
+        return {
+          title: item.title ?? "",
+          updatedAt: item.updatedAt,
+        };
+      }) ?? [],
+  };
+
+  return pagesIndex;
 }
 
 /**
@@ -80,8 +102,22 @@ async function getPageContent(pageId: string): Promise<ContentBlock[] | null> {
  * This is a temporary solution to save data.
  *
  */
-async function writePageIndex(): Promise<void | null> {}
-async function readPageIndex(): Promise<void | null> {}
+async function writePageIndex(): Promise<void | null> {
+  const usePageStorage = pageStorage;
+  const pageIndexData = await buildPageIndex();
+
+  usePageStorage.writePage(pageIndexData, pageIndexFileName);
+}
+
+/**
+ * Get the index page local JSON file.
+ * This is a temporary solution to save data.
+ *
+ */
+async function readPageIndex(): Promise<void | null> {
+  const page = await pageStorage.readPage(pageIndexFileName);
+  return page;
+}
 
 /**
  * Write a page JSON file on local
@@ -89,7 +125,6 @@ async function readPageIndex(): Promise<void | null> {}
  *
  */
 async function writePage(pageId: string): Promise<void | null> {
-  console.log("from service", pageId);
   const usePageStorage = pageStorage;
   const pageContent = await getPageContent(pageId);
   const page = {
@@ -145,4 +180,5 @@ export {
   readPageIndex,
   writePage,
   readLocalPage,
+  buildPageIndex,
 };

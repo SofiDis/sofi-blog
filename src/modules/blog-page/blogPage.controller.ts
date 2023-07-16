@@ -4,8 +4,41 @@ import {
   getPageContent,
   writePage,
   readLocalPage,
+  readPageIndex,
+  writePageIndex,
 } from "./blogPage.service";
 import { GetPagesHandler, GetPageHandler } from "./types";
+
+/**
+ * Controller to get all pages.
+ * @param req
+ * @param res
+ * @param next
+ * */
+const getPageIndex: GetPagesHandler = async (_req, res, _next) => {
+  try {
+    const pageList = await readPageIndex();
+    res.status(200).send(pageList);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+/**
+ * Controller to get all pages.
+ * @param req
+ * @param res
+ * @param next
+ * */
+const updatePageIndex: GetPagesHandler = async (_req, res, _next) => {
+  try {
+    const pageList = await writePageIndex();
+    console.log(pageList);
+    res.status(200).send("List of pages is updated.");
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 /**
  * Controller to get all pages.
@@ -74,4 +107,4 @@ const readPage: GetPageHandler = async (req, res, _next) => {
   }
 };
 
-export { getPages, getPage, savePage, readPage };
+export { getPages, getPage, savePage, readPage, getPageIndex, updatePageIndex };
