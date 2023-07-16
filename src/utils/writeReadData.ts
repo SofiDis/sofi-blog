@@ -9,13 +9,15 @@ const storagePath = config.get("app.storagePath");
 
 async function readPage(page: string) {
   const path = storagePath + page + ".json";
-  fs.readFile(path, "utf8", (error, data) => {
-    if (error) {
-      console.log(error);
-      return;
-    }
+
+  try {
+    const data = fs.readFileSync(path, "utf8");
     console.log(JSON.parse(data));
-  });
+    return JSON.parse(data);
+  } catch (error) {
+    console.log(error);
+    return;
+  }
 }
 
 async function writePage(content: any, pageName: string) {

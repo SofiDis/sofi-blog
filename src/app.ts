@@ -5,17 +5,14 @@ import express from "express";
 
 const router = express.Router();
 const app = express();
-
 const port = 3008;
-
-console.log(router);
 
 initiateRoutes(router);
 
 app.use("/api/v1", router);
 
 app.get("/", (_req, res) => {
-  res.send("Sofia's blog based on Notion integration. teeest");
+  res.send("Sofia's blog based on Notion integration.");
 });
 
 app.use(function (_req, res, next) {
