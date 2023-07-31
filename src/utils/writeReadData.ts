@@ -1,33 +1,43 @@
-/**
- * @file writeReadData.js
- * @summary Temporary utilities to save and read data using filesystem.
- * */
 const config = require("config");
-import fs from "fs";
+import fs, { Stats } from "fs";
 
+const fsp = fs.promises;
 const storagePath = config.get("app.storagePath");
+const pageFolder = "pages/";
 
-async function readPage(page: string) {
-  const path = storagePath + page + ".json";
+async function readPage(page: string, folder: string = pageFolder) {
+  const path = storagePath + folder + page + ".json";
+  const file = await fsp.readFile(path);
 
-  try {
-    const data = fs.readFileSync(path, "utf8");
-    console.log(JSON.parse(data));
-    return JSON.parse(data);
-  } catch (error) {
-    console.log(error);
-    return;
-  }
+  const convertedFile = JSON.parse(file.toString());
+
+  return convertedFile;
 }
 
 async function writePage(content: any, pageName: string) {
-  const path = storagePath + pageName + ".json";
+  const path = storagePath + pageFolder + pageName + ".json";
   const parsed = JSON.stringify(content);
   fs.writeFile(path, parsed, (err) => {
     if (!err) {
-      console.log("done");
+      console.log("page saved");
     }
   });
 }
 
-export default { readPage, writePage };
+async function readAll(): Promise<Array<{
+  name: string;
+  info: Stats;
+}> | null> {
+  const path = storagePath + pageFolder;
+  const fileData = [];
+  const files = await fsp.readdir(path);
+
+  for (const filename of files) {
+    const fileInfo = await fsp.stat(path + filename);
+    fileData.push({ name: filename, info: fileInfo });
+  }
+
+  return fileData;
+}
+
+export default { readPage, writePage, readAll };

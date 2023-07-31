@@ -1,23 +1,21 @@
-/**
- * @file index.js
- * @summary Blog pages routes.
- * */
+import { Router } from "express";
 import {
-  getPages,
   getPage,
   savePage,
-  readPage,
+  getPageList,
   getPageIndex,
   updatePageIndex,
+  getSavedPages,
 } from "./blogPage.controller";
-import { Router } from "express";
 
 export default function blogPage(router: Router) {
-  router.get("/pages/", getPages);
+  // Local files.
+  router.get("/pages/save/:pageId", savePage); // Updates page blocks of existing file.
+  router.get("/pages/list", getSavedPages); // Retunr a list of saved files.
+  router.get("/blog/index/", getPageIndex);
+  router.get("/blog/index/save", updatePageIndex); // Updates or write the index file
+
+  // For SPA.
   router.get("/pages/:pageId", getPage);
-  // Temporary for demo.
-  router.get("/page-list/", getPageIndex);
-  router.get("/page-list/update", updatePageIndex);
-  router.get("/pages/save/:pageId", savePage);
-  router.get("/pages/read/:pageId", readPage);
+  router.get("/pages/", getPageList);
 }

@@ -1,10 +1,4 @@
-/**
- * @file blogPage.service.ts
- * @summary Handle the transformation of the Notion data.
- * */
-
 import pageStorage from "../../utils";
-import fs from "fs";
 
 import {
   BlockObjectResponse,
@@ -32,12 +26,17 @@ async function indexPages(): Promise<Page[] | null> {
 
   notionPages?.forEach((item) => {
     if (isFullPageDataResponse(item)) {
+      const itemNoType = item as any;
+
+      const itemTitle = itemNoType?.properties?.Name?.title.map((item: any) => {
+        return item.plain_text;
+      });
+
       pages.push({
         id: item.id,
-        title: "To solve this",
+        title: itemTitle.join(" "),
         createdAt: item.created_time,
         updatedAt: item.last_edited_time ?? item.created_time,
-        tags: ["to solve it"],
       });
     }
   });
@@ -53,10 +52,10 @@ async function buildPageIndex(): Promise<any | null> {
   const allPages = await indexPages();
 
   const pagesIndex = {
-    blogTitle: "",
     pageList:
       allPages?.map((item: Page) => {
         return {
+          id: item.id,
           title: item.title ?? "",
           updatedAt: item.updatedAt,
         };
@@ -98,6 +97,39 @@ async function getPageContent(pageId: string): Promise<ContentBlock[] | null> {
 }
 
 /**
+ * Get a local page content.
+ *
+ */
+async function getLocalPageContent(pageId: string): Promise<any | null> {
+  const usePageStorage = pageStorage;
+
+  const localPage = await usePageStorage
+    .readPage(pageId)
+    .catch((error) => error);
+
+  let pageContent: ContentBlock[] = [];
+
+  if (!localPage.content) throw new Error("Page not found");
+
+  localPage?.content.forEach((item: any, index: number) => {
+    const itemWithType = item as any;
+    const itemType = itemWithType.type;
+
+    pageContent.push({
+      id: item.id,
+      parentId: pageId,
+      type: item?.type ?? "undefined",
+      order: index,
+      rich_text: item?.rich_text ?? [],
+      content: itemWithType[itemType]?.rich_text?.plain_text ?? "",
+      color: itemWithType[itemType]?.color ?? "default",
+    });
+  });
+
+  return { title: localPage.title, content: pageContent };
+}
+
+/**
  * Write a page index JSON file on local
  * This is a temporary solution to save data.
  *
@@ -114,9 +146,9 @@ async function writePageIndex(): Promise<void | null> {
  * This is a temporary solution to save data.
  *
  */
-async function readPageIndex(): Promise<void | null> {
-  const page = await pageStorage.readPage(pageIndexFileName);
-  return page;
+async function readPageIndex(): Promise<any | null> {
+  const pageIndex = await pageStorage.readPage(pageIndexFileName);
+  return pageIndex;
 }
 
 /**
@@ -127,20 +159,20 @@ async function readPageIndex(): Promise<void | null> {
 async function writePage(pageId: string): Promise<void | null> {
   const usePageStorage = pageStorage;
   const pageContent = await getPageContent(pageId);
+  const pageIndex = await readPageIndex();
+
+  console.log(pageIndex.pageList);
+
+  const pageData = pageIndex.pageList.filter(
+    (item: any) => item.id === pageId
+  )[0];
+
   const page = {
+    title: pageData.title ?? "Undefined",
     content: pageContent ?? [],
   };
 
   usePageStorage.writePage(page, pageId);
-
-  // check if page exists.
-  fs.exists(`./src/storage/${pageId}.json`, function (exists) {
-    if (exists) {
-      console.log("exist");
-    } else {
-      console.log("doesnt exists");
-    }
-  });
 }
 
 /**
@@ -151,7 +183,49 @@ async function writePage(pageId: string): Promise<void | null> {
 //TODO: fix type here.
 async function readLocalPage(pageId: string): Promise<any | null> {
   const page = await pageStorage.readPage(pageId);
+
   return page;
+}
+
+/**
+ * Read all JSON file pages stored locally.
+ * This is a temporary solution to save data.
+ *
+ */
+async function readAllPages(): Promise<Array<{
+  name: string;
+  date: Date;
+}> | null> {
+  const pages = await pageStorage
+    .readAll()
+    .catch((error) => console.log(error));
+
+  if (!pages) return null;
+  const convertedPage = pages.map((item) => {
+    return { name: item.name, date: item.info.mtime };
+  });
+
+  return convertedPage;
+}
+
+/**
+ * Retunr a list of pages
+ *
+ */
+async function listPages(): Promise<Array<{
+  name: string;
+  date: Date;
+}> | null> {
+  const pageIndex = await readPageIndex().catch((error) => console.log(error));
+
+  if (!pageIndex.pageList) return [];
+
+  // TODO: decide how to fomrat data.
+  const pageList = pageIndex.pageList?.map((item: any) => {
+    return { [item.id]: { name: item.title, date: item.updatedAt } };
+  });
+
+  return pageList;
 }
 
 // Helped here.
@@ -175,10 +249,13 @@ function isFullBlockDataResponse(
 
 export {
   indexPages,
+  getLocalPageContent,
   getPageContent,
   writePageIndex,
   readPageIndex,
   writePage,
   readLocalPage,
   buildPageIndex,
+  readAllPages,
+  listPages,
 };
