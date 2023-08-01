@@ -7,7 +7,9 @@
   "author": "Sofidis <sofia.dissegna93@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "yarn run ts-node-dev --respawn --transpile-only ./src/app.ts"
+    "dev": "yarn run ts-node-dev --respawn --transpile-only ./src/app.ts",
+    "build:prod": "yarn run tsc",
+    "start:prod": "node build/src/app.js"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.6",

@@ -43,7 +43,7 @@ const savePage: GetPageHandler = async (req, res, _next) => {
  * Local files: Return all pages saved as files.
  *
  * */
-const getSavedPages: GetPageHandler = async (req, res, _next) => {
+const getSavedPages: GetPageHandler = async (_req, res, _next) => {
   const pages = await readAllPages().catch((error) => console.log(error));
   res.status(200).send(pages);
 };
@@ -52,7 +52,7 @@ const getSavedPages: GetPageHandler = async (req, res, _next) => {
  * Local files: Return the saved page index file.
  *
  * */
-const getPageIndex: GetPageHandler = async (req, res, _next) => {
+const getPageIndex: GetPageHandler = async (_req, res, _next) => {
   const index = await readPageIndex().catch((error) => console.log(error));
   res.status(200).send(index);
 };
