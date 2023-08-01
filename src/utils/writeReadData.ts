@@ -2,7 +2,7 @@ const config = require("config");
 import fs, { Stats } from "fs";
 
 const fsp = fs.promises;
-const storagePath = config.get("app.storagePath") ?? "./src/storage/";
+const storagePath = config.get("app.storagePath");
 const pageFolder = "pages/";
 
 async function readPage(page: string, folder: string = pageFolder) {
