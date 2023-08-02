@@ -1,7 +1,7 @@
 module.exports = {
   app: {
     url: process.env.URL || "http://localhost:3008",
-    storagePath: process.env.URL || "./src/storage/",
+    storagePath: "./src/storage/",
   },
   databases: {},
   services: {
