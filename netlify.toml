@@ -1,7 +1,7 @@
 [functions]
   external_node_modules = ["express", "config"]
   node_bundler = "esbuild"
-  included_files = ["src/storage/*", "config/*"]
+  included_files = ["src/**/*", "config/*"]
 [[redirects]]
   force = true
   from = "/API/*"
