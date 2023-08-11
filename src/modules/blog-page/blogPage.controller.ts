@@ -1,12 +1,11 @@
 require("config");
 import {
-  getLocalPageContent,
-  writePage,
-  readLocalPage,
   readPageIndex,
-  writePageIndex,
-  readAllPages,
-  listPages,
+  saveBlogPage,
+  savePageIndex,
+  deleteBlogPage,
+  listBlogPages,
+  getBlogPage,
 } from "./blogPage.service";
 import { GetPagesHandler, GetPageHandler } from "./types";
 
@@ -17,7 +16,7 @@ import { GetPagesHandler, GetPageHandler } from "./types";
 const getPage: GetPageHandler = async (req, res, _next) => {
   const pageId = req.params.pageId;
   try {
-    const page = await getLocalPageContent(pageId);
+    const page = await getBlogPage(pageId);
     res.status(200).send(page);
   } catch (error) {
     console.log(error);
@@ -26,13 +25,13 @@ const getPage: GetPageHandler = async (req, res, _next) => {
 };
 
 /**
- * Local file: Save locally a page.
+ * Mongo DB: Save a page.
  *
  * */
 const savePage: GetPageHandler = async (req, res, _next) => {
   const pageId = req.params.pageId;
   try {
-    writePage(pageId);
+    saveBlogPage(pageId);
     res.status(200).send(`Page ${pageId} has been saved.`);
   } catch (error) {
     console.log(error);
@@ -40,12 +39,16 @@ const savePage: GetPageHandler = async (req, res, _next) => {
 };
 
 /**
- * Local files: Return all pages saved as files.
+ * Mongo DB: Save a page.
  *
  * */
-const getSavedPages: GetPageHandler = async (_req, res, _next) => {
-  const pages = await readAllPages().catch((error) => console.log(error));
-  res.status(200).send(pages);
+const saveIndex: GetPageHandler = async (_req, res, _next) => {
+  try {
+    savePageIndex();
+    res.status(200).send(`Index has been saved`);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 /**
@@ -58,24 +61,14 @@ const getPageIndex: GetPageHandler = async (_req, res, _next) => {
 };
 
 /**
- * Local files: Updates the page index file.
- *
- * */
-const updatePageIndex: GetPagesHandler = async (_req, res, _next) => {
-  const pageList = await writePageIndex().catch((error) => console.log(error));
-  console.log(pageList);
-  res.status(200).send("List of pages is updated.");
-};
-
-/**
  * Read a page.
  *
  * */
-const readPage: GetPageHandler = async (req, res, _next) => {
+const deletePage: GetPageHandler = async (req, res, _next) => {
   const pageId = req.params.pageId;
   try {
-    const page = await readLocalPage(pageId);
-    res.status(200).send(page);
+    await deleteBlogPage(pageId);
+    res.status(200).send("Page deleted.");
   } catch (error) {
     console.log(error);
   }
@@ -85,8 +78,10 @@ const readPage: GetPageHandler = async (req, res, _next) => {
  * Get the page list.
  *
  * */
-const getPageList: GetPagesHandler = async (_req, res, _next) => {
-  const pageList = await listPages().catch((error) => console.log(error));
+const listPages: GetPagesHandler = async (_req, res, _next) => {
+  const pageList = await listBlogPages().catch((error: any) =>
+    console.log(error)
+  );
   console.log(pageList);
   res.status(200).send(pageList);
 };
@@ -94,11 +89,11 @@ const getPageList: GetPagesHandler = async (_req, res, _next) => {
 export {
   // Local files.
   savePage,
-  getSavedPages,
-  readPage,
-  updatePageIndex,
   getPageIndex,
+  // Database related
+  saveIndex,
+  deletePage,
+  listPages,
   // For SPA.
   getPage,
-  getPageList,
 };
