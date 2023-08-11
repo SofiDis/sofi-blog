@@ -1,12 +1,16 @@
-import "./core/common";
-
-import initiateRoutes from "./modules";
 import express from "express";
+import "./core/common";
+import { connectToDatabase } from "./core/mongoDb";
+import initiateRoutes from "./modules";
 
 const router = express.Router();
 const app = express();
 const port = 3008;
 
+// Conect to the database.
+connectToDatabase().catch(console.dir);
+
+// Initalise routes.
 initiateRoutes(router);
 
 app.use("/api/v1", router);

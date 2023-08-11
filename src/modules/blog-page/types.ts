@@ -42,12 +42,14 @@ export type Page = {
   id: string;
   dbId?: string;
   title?: string;
-  createdAt: string;
+  createdAt: string | Date;
   // Should be createdAt if not updated.
-  updatedAt: string;
+  updatedAt: string | Date;
   tags?: string[];
   content?: ContentBlock[];
 };
+
+export type PageList = Array<Partial<Page>>;
 
 // const BLOCK_TYPES = {
 //   PARAGRAPH: "paragraph",

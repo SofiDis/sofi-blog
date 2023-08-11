@@ -1,5 +1,3 @@
-import pageStorage from "../../utils";
-
 import {
   BlockObjectResponse,
   PageObjectResponse,
@@ -7,11 +5,11 @@ import {
   PartialPageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 
-import {
-  getPagesData,
-  getBlockData,
-} from "../../providers/services/notionService";
-import { ContentBlock, Page } from "./types";
+import { getPagesData } from "../../providers/services/notionService";
+import { ContentBlock, Page, PageList } from "./types";
+
+import pageStorage from "../../utils";
+import { collections } from "../../core/mongoDb";
 
 const pageIndexFileName = "pageIndex";
 
@@ -66,37 +64,6 @@ async function buildPageIndex(): Promise<any | null> {
 }
 
 /**
- * Create a page from a Notion Page.
- *
- */
-async function getPageContent(pageId: string): Promise<ContentBlock[] | null> {
-  // For now reading directly from Notion.
-  const notionPageBlocks = await getBlockData(pageId);
-
-  let pageContent: ContentBlock[] = [];
-
-  notionPageBlocks?.forEach((item, index) => {
-    if (isFullBlockDataResponse(item)) {
-      // Tweak to fix dynamic propertiy.
-      const itemWithType = item as any;
-      const itemType = itemWithType.type;
-
-      pageContent.push({
-        id: item.id,
-        parentId: pageId,
-        type: item?.type ?? "undefined",
-        order: index,
-        rich_text: itemWithType[itemType] ?? [],
-        content: itemWithType[itemType].rich_text?.plain_text ?? "",
-        color: itemWithType[itemType].color ?? "default",
-      });
-    }
-  });
-
-  return pageContent;
-}
-
-/**
  * Get a local page content.
  *
  */
@@ -142,90 +109,157 @@ async function writePageIndex(): Promise<void | null> {
 }
 
 /**
- * Get the index page local JSON file.
- * This is a temporary solution to save data.
+ * Read page index saved in the database.
  *
  */
 async function readPageIndex(): Promise<any | null> {
-  const pageIndex = await pageStorage.readPage(pageIndexFileName);
-  return pageIndex;
+  if (!collections.blogIndex) return null;
+
+  const blogIndex = await collections.blogIndex
+    .find({})
+    .toArray()
+    .catch((error) => console.log(error));
+
+  if (!blogIndex) return null;
+
+  console.log(blogIndex);
+
+  return blogIndex[0];
 }
 
 /**
- * Write a page JSON file on local
- * This is a temporary solution to save data.
+ * Build index from Notion and
+ * save/update in the database.
  *
  */
-async function writePage(pageId: string): Promise<void | null> {
-  const usePageStorage = pageStorage;
-  const pageContent = await getPageContent(pageId);
-  const pageIndex = await readPageIndex();
+async function savePageIndex(): Promise<void | null> {
+  const notionData = await indexPages().catch((error) => console.log(error));
 
-  console.log(pageIndex.pageList);
+  const index = {
+    updatedAt: new Date(),
+    content: notionData,
+  };
 
-  const pageData = pageIndex.pageList.filter(
-    (item: any) => item.id === pageId
-  )[0];
+  if (!notionData || !collections.blogIndex) return null;
+
+  // Remove old index.
+  await collections.blogIndex.deleteMany({});
+
+  try {
+    const result = await collections.blogIndex.insertOne(index);
+    console.log("Index", result);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+/**
+ * Get a page content from Notion and
+ * save it in the database.
+ *
+ */
+async function saveBlogPage(pageId: string): Promise<void | null> {
+  const pageContent = await getPageContent(pageId).catch((error) =>
+    console.log(error)
+  );
 
   const page = {
-    title: pageData.title ?? "Undefined",
+    id: pageId,
+    title: "My page title",
     content: pageContent ?? [],
   };
 
-  usePageStorage.writePage(page, pageId);
+  try {
+    if (!collections.blogPage) return;
+    const result = await collections.blogPage.insertOne(page);
+    console.log("db result", result);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 /**
- * Read a page JSON file locally.
- * This is a temporary solution to save data.
+ * Delete a page from the database.
  *
  */
-//TODO: fix type here.
-async function readLocalPage(pageId: string): Promise<any | null> {
-  const page = await pageStorage.readPage(pageId);
+async function deleteBlogPage(pageId: string): Promise<void | null> {
+  try {
+    if (!collections.blogPage) return;
 
-  return page;
+    await collections.blogPage.deleteOne({ id: pageId });
+
+    console.log("Page deleted");
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 /**
- * Read all JSON file pages stored locally.
- * This is a temporary solution to save data.
+ * List all pages saved in the database.
  *
  */
-async function readAllPages(): Promise<Array<{
-  name: string;
-  date: Date;
-}> | null> {
-  const pages = await pageStorage
-    .readAll()
+async function listBlogPages(): Promise<PageList> {
+  try {
+    if (!collections.blogPage) return [];
+
+    const pages = await collections.blogPage
+      .find({})
+      .toArray()
+      .catch((error) => console.log(error));
+
+    const pageList =
+      pages &&
+      pages.map((item) => {
+        return {
+          id: item.id,
+          title: item.title,
+        };
+      });
+
+    console.log(pages);
+
+    return pageList || [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+/**
+ * Get a saved page.
+ *
+ */
+async function getBlogPage(pageId: string): Promise<Partial<Page> | null> {
+  const query = { id: pageId };
+
+  if (!collections.blogPage) return null;
+
+  const page = await collections.blogPage
+    .findOne(query)
     .catch((error) => console.log(error));
 
-  if (!pages) return null;
-  const convertedPage = pages.map((item) => {
-    return { name: item.name, date: item.info.mtime };
+  if (!page) return null;
+
+  let pageContent: ContentBlock[] = [];
+
+  if (!page.content) throw new Error("Page not found");
+
+  page?.content.forEach((item: any, index: number) => {
+    const itemWithType = item as any;
+    const itemType = itemWithType.type;
+
+    pageContent.push({
+      id: item.id,
+      parentId: pageId,
+      type: item?.type ?? "undefined",
+      order: index,
+      rich_text: item?.rich_text ?? [],
+      content: itemWithType[itemType]?.rich_text?.plain_text ?? "",
+      color: itemWithType[itemType]?.color ?? "default",
+    });
   });
 
-  return convertedPage;
-}
-
-/**
- * Retunr a list of pages
- *
- */
-async function listPages(): Promise<Array<{
-  name: string;
-  date: Date;
-}> | null> {
-  const pageIndex = await readPageIndex().catch((error) => console.log(error));
-
-  if (!pageIndex.pageList) return [];
-
-  // TODO: decide how to fomrat data.
-  const pageList = pageIndex.pageList?.map((item: any) => {
-    return { [item.id]: { name: item.title, date: item.updatedAt } };
-  });
-
-  return pageList;
+  return { id: pageId, title: page.title, content: pageContent };
 }
 
 // Helped here.
@@ -250,12 +284,14 @@ function isFullBlockDataResponse(
 export {
   indexPages,
   getLocalPageContent,
-  getPageContent,
   writePageIndex,
-  readPageIndex,
-  writePage,
-  readLocalPage,
   buildPageIndex,
-  readAllPages,
-  listPages,
+  // Related to database.
+  saveBlogPage,
+  savePageIndex,
+  readPageIndex,
+  deleteBlogPage,
+  listBlogPages,
+  // Spa
+  getBlogPage,
 };
