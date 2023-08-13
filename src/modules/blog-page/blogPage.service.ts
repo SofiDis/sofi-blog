@@ -5,7 +5,10 @@ import {
   PartialPageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 
-import { getPagesData } from "../../providers/services/notionService";
+import {
+  getBlockData,
+  getPagesData,
+} from "../../providers/services/notionService";
 import { ContentBlock, Page, PageList } from "./types";
 
 import pageStorage from "../../utils";
@@ -159,7 +162,7 @@ async function savePageIndex(): Promise<void | null> {
  *
  */
 async function saveBlogPage(pageId: string): Promise<void | null> {
-  const pageContent = await getPageContent(pageId).catch((error) =>
+  const pageContent = await getBlockData(pageId).catch((error) =>
     console.log(error)
   );
 

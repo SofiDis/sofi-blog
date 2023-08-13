@@ -28,13 +28,13 @@ const getPage: GetPageHandler = async (req, res, _next) => {
  * Mongo DB: Save a page.
  *
  * */
-const savePage: GetPageHandler = async (req, res, _next) => {
+const savePage: GetPageHandler = async (req, res, next) => {
   const pageId = req.params.pageId;
   try {
     saveBlogPage(pageId);
     res.status(200).send(`Page ${pageId} has been saved.`);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
@@ -42,12 +42,12 @@ const savePage: GetPageHandler = async (req, res, _next) => {
  * Mongo DB: Save a page.
  *
  * */
-const saveIndex: GetPageHandler = async (_req, res, _next) => {
+const saveIndex: GetPageHandler = async (_req, res, next) => {
   try {
     savePageIndex();
     res.status(200).send(`Index has been saved`);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
@@ -55,8 +55,8 @@ const saveIndex: GetPageHandler = async (_req, res, _next) => {
  * Local files: Return the saved page index file.
  *
  * */
-const getPageIndex: GetPageHandler = async (_req, res, _next) => {
-  const index = await readPageIndex().catch((error) => console.log(error));
+const getPageIndex: GetPageHandler = async (_req, res, next) => {
+  const index = await readPageIndex().catch((error) => next(error));
   res.status(200).send(index);
 };
 
@@ -64,13 +64,13 @@ const getPageIndex: GetPageHandler = async (_req, res, _next) => {
  * Read a page.
  *
  * */
-const deletePage: GetPageHandler = async (req, res, _next) => {
+const deletePage: GetPageHandler = async (req, res, next) => {
   const pageId = req.params.pageId;
   try {
     await deleteBlogPage(pageId);
     res.status(200).send("Page deleted.");
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
@@ -78,10 +78,8 @@ const deletePage: GetPageHandler = async (req, res, _next) => {
  * Get the page list.
  *
  * */
-const listPages: GetPagesHandler = async (_req, res, _next) => {
-  const pageList = await listBlogPages().catch((error: any) =>
-    console.log(error)
-  );
+const listPages: GetPagesHandler = async (_req, res, next) => {
+  const pageList = await listBlogPages().catch((error: any) => next(error));
   console.log(pageList);
   res.status(200).send(pageList);
 };
