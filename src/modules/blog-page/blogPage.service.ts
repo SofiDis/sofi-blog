@@ -1,7 +1,5 @@
 import {
-  BlockObjectResponse,
   PageObjectResponse,
-  PartialBlockObjectResponse,
   PartialPageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 
@@ -272,14 +270,6 @@ function isFullPageDataResponse(
   if (!maybePartial) return false;
 
   return "properties" in maybePartial;
-}
-
-function isFullBlockDataResponse(
-  maybePartial: PartialBlockObjectResponse | BlockObjectResponse | null
-): maybePartial is BlockObjectResponse {
-  if (!maybePartial) return false;
-
-  return "type" in maybePartial;
 }
 
 // <3
