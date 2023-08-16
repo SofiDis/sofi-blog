@@ -1,7 +1,7 @@
 import express from "express";
 import "./core/common";
 import { connectToDatabase } from "./core/mongoDb";
-import initiateRoutes from "./modules";
+import { initiateRoutes } from "./modules";
 import { errorMiddleware } from "./middlewares/httpError";
 
 const router = express.Router();

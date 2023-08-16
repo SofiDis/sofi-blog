@@ -8,7 +8,7 @@ import {
   listPages,
 } from "./blogPage.controller";
 
-export default function blogPage(router: Router) {
+export function blogPage(router: Router) {
   // Related to MongoDB.
   router.get("/pages/save/:pageId", savePage);
   router.get("/blog/index/", getPageIndex);

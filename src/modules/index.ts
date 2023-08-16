@@ -4,10 +4,10 @@
  * */
 
 import { Router } from "express";
-import blogPage from "./blog-page";
+import { blogPage } from "./blog-page";
 
 const initiateRoutes = (router: Router) => {
   blogPage(router);
 };
 
-export default initiateRoutes;
+export { initiateRoutes };

@@ -1,16 +1,11 @@
+import { dbConnection } from "./../../src/middlewares/dbConnection";
 import express, { Router } from "express";
 import serverless from "serverless-http";
-import initiateRoutes from "../../src/modules";
+import { initiateRoutes } from "../../src/modules";
 import { errorMiddleware } from "../../src/middlewares/httpError";
-import { connectToDatabase } from "../../src/core/mongoDb";
 
 const api = express();
 const errorMiddl = errorMiddleware();
-
-// Conect to the database.
-connectToDatabase()
-  .catch(console.dir)
-  .finally(() => console.log("connected db"));
 
 const router = Router();
 
@@ -23,6 +18,8 @@ api.use(function (_req, res, next) {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   next();
 });
+
+api.use(dbConnection);
 
 api.use("/API/V2", router);
 
